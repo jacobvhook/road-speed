@@ -60,4 +60,4 @@ different degrees of completeness. The [Python module OSMnx][OSMPy] can be used 
 and visualize OSM data.
 
 [TOD]: https://open.toronto.ca/dataset/street-tree-data/
-[OSMPy]: https://pygis.io/docs/d_access_osm.htm
+[OSMPy]: https://pygis.io/docs/d_access_osm.html
