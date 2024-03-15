@@ -17,7 +17,8 @@ TODO: Add data sources to the following features
     - Open Street Maps (OSM)
 - Corridor width (related to building setback)
 - Presence of trees
-    - OSM
+  - OSM
+  - [Toronto's Open Data][TOD]
 - Existence and style of a median (painted, vegetation, concrete)
 - Presence and type of cycling infrastructure
     - OSM
@@ -55,3 +56,5 @@ daytime/nighttime, on-peak/ off-peak)
 ### OSM data
 
 Data from open street maps is publicly maintained, so different areas will have different degrees of completeness. The Python module OSMnx can be used to fetch and visualize OSM data: https://pygis.io/docs/d_access_osm.html.
+
+[TOD]: https://open.toronto.ca/dataset/street-tree-data/
