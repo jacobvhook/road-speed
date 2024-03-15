@@ -41,6 +41,8 @@ TODO: Add data sources to the following features
     - OSM
 - Presence of a bus route
     - OSM
+- Speed restrictions
+    - OSM
 
 ## Other points
 
