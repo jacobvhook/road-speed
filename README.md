@@ -42,6 +42,8 @@ and mean absolute error (MAE) between the true accident rate and predicted accid
 # Approach
 **TODO: explain models here**
 
+* **Baseline model**: takes the mean accident rate across the city
+
 # [Web app](https://streamlit.io/)
 
 # Future Iterations
