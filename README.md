@@ -1,6 +1,53 @@
 # Road safety
 
-Erdos Institute Data Science Project on Road Safety
+The purpose of this project is to use regression modeling and neural
+networks to to predict accident rates in New York City using public 
+road data and other geological features, and to identify key 
+road infrastructures that can improve safety in the cheapest way possible.
+
+# Authors
+* [Assaf Bar-Natan](https://www.linkedin.com/in/assaf-bar-natan-b61556209)
+* [Jesse Frohlich]
+* [Jacob van Hook]
+* [Perdo Lemos]
+* [Guillermo Sanmarco]
+
+## Description
+
+# Overview
+
+Traffic accidents are a leading cause of death and injury amongst
+Americans under the age of 54. A significant portion of these
+accidents are preventable by changing driver attitudes and improving
+in-vehicle safety measures, but also by creating better public
+infrastructure that encourages safe practices.
+
+**paragraph about using ML to identify what these practices are**
+** paragraph about finding problem areas to improve**
+
+The goal of this project is to... **todo**
+
+**Stakeholders:** General public, local politicians, neighbourhood advocacy groups, commuters, urban planners, road design engineers, NYC police, insurance companies
+
+**KPIs for accident rate forecasting:** mean squared error (MSE) 
+and mean absolute error (MAE) between the true accident rate and predicted accident rate.
+
+# Datasets
+
+* Datasets required for the project: road features, urban features (such as trees, zoning, intersections), accident rate
+  * ...
+* Data processing...
+
+
+# Approach
+**TODO: explain models here**
+
+# [Web app](https://streamlit.io/)
+
+# Future Iterations
+
+# Citations
+
 
 ## Project outline
 
