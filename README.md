@@ -8,10 +8,10 @@ safety in the cheapest way possible.
 # Authors
 
 - [Assaf Bar-Natan](https://www.linkedin.com/in/assaf-bar-natan-b61556209)
-- [Jesse Frohlich]
-- [Jacob van Hook]
-- [Perdo Lemos]
-- [Guillermo Sanmarco]
+- [Jesse Frohlich](https://www.linkedin.com/in/jessefrohlich)
+- [Jacob van Hook](https://www.linkedin.com/in/jacob-van-hook-4484b2288/)
+- [Perdo Lemos](https://www.linkedin.com/in/pedro-j-lemos/)
+- [Guillermo Sanmarco](https://www.linkedin.com/in/guillermo-sanmarco-050904239/)
 
 ## Description
 
