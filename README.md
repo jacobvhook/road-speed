@@ -45,7 +45,7 @@ absolute error (MAE) between the true accident rate and predicted accident rate.
 
 **TODO: explain models here**
 
-* **Baseline model**: takes the mean accident rate across the city
+- **Baseline model**: takes the mean accident rate across the city
 
 # [Web app](https://streamlit.io/)
 
@@ -121,6 +121,25 @@ formatting is consistent before committing. The currently-used hooks are:
 
 To set up the hooks on your local machine, install `pre-commit`, then run
 `pre-commit install` to install the formatters that will run before each commit.
+
+To set up the working environment, it is strongly encouraged to set up a virtual
+environment, say with `pyenv`:
+
+```
+$ python -m venv .venv
+```
+
+To activate the virtual environment, source the following:
+
+```
+$ source .venv/bin/activate
+```
+
+Finally, you can install the packages locally via `pip`:
+
+```
+pip install -r requirements.txt
+```
 
 [TOD]: https://open.toronto.ca/dataset/street-tree-data/
 [OSMnx]: https://pygis.io/docs/d_access_osm.html
