@@ -10,7 +10,7 @@ class OpenDataDownloader:
     def __init__(self, app_token: str):
         self.app_token = app_token
 
-    def load_data(self, dataset: str, limit: int) -> pd.DataFrame:
+    def load_data(self, dataset: str, limit: int = None) -> pd.DataFrame:
         client = Socrata("data.cityofnewyork.us", app_token=self.app_token)
         results = client.get(dataset, limit=limit)
         return pd.DataFrame.from_records(results)
@@ -24,7 +24,7 @@ class OpenDataDownloader:
         limit: int = None,
     ):
         df = self.load_data(dataset, limit)
-        df["geometry"] = df[geometry_column].apply(lambda o: shape(o))
+        df["geometry"] = df[geometry_column].apply(shape)
         df.drop(columns=[geometry_column], inplace=True)
         if to_crs == None:
             return gpd.GeoDataFrame(df, geometry=df.geometry, crs=crs)
