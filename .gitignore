@@ -1,5 +1,6 @@
 .venv
 cache/
+data-exploration/__pycache__/
 data-exploration/data/
 data-exploration/.env
 node_modules/
