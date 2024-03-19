@@ -1,3 +1,5 @@
 .venv
 cache/
+data-exploration/data/
+data-exploration/.env
 node_modules/

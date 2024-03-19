@@ -1,4 +1,9 @@
-networkx
-osmnx
-geopandas
+geopandas>=0.14.3
 matplotlib
+networkx
+numpy>=1.26.4
+osmnx
+pandas>=2.2.0
+scikit-learn>=1.4.0
+shapely>=2.0.3
+sodapy>=2.2.0
