@@ -22,7 +22,7 @@ class OpenDataDownloader:
         crs: str = "EPSG:4326",
         to_crs: str = None,
         limit: int = None,
-    ):
+    ) -> gpd.GeoDataFrame:
         df = self.load_data(dataset, limit)
         df["geometry"] = df[geometry_column].apply(shape)
         df.drop(columns=[geometry_column], inplace=True)
