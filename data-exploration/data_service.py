@@ -69,6 +69,11 @@ class CrashDataService:
         speed_limits = gpd.GeoDataFrame(speed_limits, crs=geo.NYC_EPSG)
         speed_limits["geometry"] = speed_limits.geometry.centroid
         return speed_limits
+    
+    def __load_trees_dataset(self) -> gpd.GeoDataFrame:
+        trees = self.data_loader.load_geo_dataframe(data_sources.TREES_ENDPOINT, "the_geom", to_crs=geo.NYC_EPSG, limit=3000000)
+        trees = trees[["tree_id", "geometry"]]
+        return trees
 
     def __get_datetime(self, date: str, time: str) -> datetime:
         year, month, day = list(map(int, date.split("T")[0].split("-")))
@@ -95,6 +100,7 @@ class CrashDataService:
         buffer: int,
         join_speed_humps: bool=False,
         join_speed_limits: bool=False,
+        join_trees: bool=False,
         destination_file_name: str | None=None,
     ) -> gpd.GeoDataFrame:
         final_cols = ["collision_id", "geometry", "datetime", "physicalid", "shape_leng"]
@@ -108,6 +114,11 @@ class CrashDataService:
             speed_limits = self.__load_speed_limits_dataset()
             street_data = self.__spatial_join_to_street_data(street_data, speed_limits, "postvz_sl", "mean")
             final_cols.append("postvz_sl")
+        if join_trees:
+            trees = self.__load_trees_dataset()
+            street_data = self.__spatial_join_to_street_data(street_data, trees, "tree_id", "count")
+            street_data = street_data.rename(columns={"tree_id": "trees"})
+            final_cols.append("trees")
         crashes_street = self.crashes.sjoin(street_data, how="left")
         crashes_count = crashes_street.groupby(by="collision_id", as_index=False, dropna=False)["physicalid"].count()
         non_intersection_crashes = crashes_count[crashes_count["physicalid"] == 1]
@@ -116,5 +127,5 @@ class CrashDataService:
         non_intersection_crashes = non_intersection_crashes[final_cols]
         if destination_file_name is not None:
             data_base_path = Path("./data")
-            non_intersection_crashes.to_csv(data_base_path / destination_file_name)                
+            non_intersection_crashes.to_csv(data_base_path / destination_file_name, index=False)                
         return non_intersection_crashes
