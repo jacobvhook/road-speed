@@ -1,17 +1,22 @@
 from data_downloader import OpenDataDownloader
-from pathlib import Path
-import geopandas as gpd
-import geo
 import data_sources
 from datetime import datetime
-from shapely import empty, GeometryType
+import geo
+import geopandas as gpd
 import pandas as pd
+from pathlib import Path
+from shapely import empty, GeometryType
 
 
 class CrashDataService:
     """Class providing some data processing methods for data obtained from NYC Open Data."""
 
-    def __init__(self, nyc_app_token: str, from_year: int = 2010, extra_columns: list[str] | None=None):
+    def __init__(
+        self,
+        nyc_app_token: str,
+        from_year: int = 2010,
+        extra_columns: list[str] | None = None,
+    ):
         self.app_token = nyc_app_token
         self.data_loader = OpenDataDownloader(nyc_app_token)
         self.from_year = from_year
@@ -22,7 +27,13 @@ class CrashDataService:
         self.crashes = self.data_loader.load_data(
             data_sources.CRASHES_ENDPOINT, limit=3000000
         )
-        columns_to_return = ["collision_id", "crash_date", "crash_time", "latitude", "longitude"]
+        columns_to_return = [
+            "collision_id",
+            "crash_date",
+            "crash_time",
+            "latitude",
+            "longitude",
+        ]
         if self.columns is not None:
             for col in self.columns:
                 if col not in columns_to_return:
@@ -141,7 +152,7 @@ class CrashDataService:
             "datetime",
             "physicalid",
             "shape_leng",
-            "st_width"
+            "st_width",
         ] + self.columns
         street_data = self.__load_streets_dataset(
             columns_to_load=["geometry", "physicalid", "shape_leng", "st_width"]
