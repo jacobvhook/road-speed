@@ -5,7 +5,7 @@ import geo
 import geopandas as gpd
 import pandas as pd
 from pathlib import Path
-from shapely import empty, GeometryType
+from shapely import empty, GeometryType, union_all
 
 
 class CrashDataService:
@@ -138,7 +138,31 @@ class CrashDataService:
         street_data = gpd.GeoDataFrame(street_data, crs=geo.NYC_EPSG)
         return street_data
 
-    def get_non_intersection_crashes(
+    def __get_intersection_crashes(
+        self, street_geometry: gpd.GeoDataFrame, buffer: int
+    ) -> gpd.GeoDataFrame:
+        street_geometry["intersections"] = street_geometry.geometry.boundary.buffer(
+            buffer
+        )
+        intersections = gpd.GeoDataFrame(
+            street_geometry[["physicalid", "intersections"]],
+            crs=geo.NYC_EPSG,
+            geometry="intersections",
+        )
+        intersection_crashes_ids = (
+            self.crashes[["collision_id", "geometry"]]
+            .sjoin(intersections, how="inner", predicate="within")["collision_id"]
+            .drop_duplicates()
+        )
+        intersection_crashes_mask = self.crashes["collision_id"].isin(
+            intersection_crashes_ids.values
+        )
+        return (
+            self.crashes[intersection_crashes_mask],
+            self.crashes[~intersection_crashes_mask],
+        )
+
+    def get_non_intersection_info(
         self,
         buffer: int,
         join_speed_humps: bool = False,
@@ -153,9 +177,14 @@ class CrashDataService:
             "physicalid",
             "shape_leng",
             "st_width",
-        ] + self.columns
+        ]
+        if self.columns is not None:
+            final_cols += self.columns
         street_data = self.__load_streets_dataset(
             columns_to_load=["geometry", "physicalid", "shape_leng", "st_width"]
+        )
+        _, non_intersection_crashes = self.__get_intersection_crashes(
+            street_data, buffer
         )
         street_data["geometry"] = street_data.geometry.buffer(buffer)
         if join_speed_humps:
@@ -177,19 +206,10 @@ class CrashDataService:
             )
             street_data = street_data.rename(columns={"tree_id": "trees"})
             final_cols.append("trees")
-        crashes_street = self.crashes.sjoin(street_data, how="left")
-        crashes_count = crashes_street.groupby(
-            by="collision_id", as_index=False, dropna=False
-        )["physicalid"].count()
-        non_intersection_crashes = crashes_count[crashes_count["physicalid"] == 1]
-        non_intersection_crashes = non_intersection_crashes.drop(columns=["physicalid"])
-        non_intersection_crashes = crashes_street.merge(
-            non_intersection_crashes, on="collision_id", how="inner"
-        )
-        non_intersection_crashes = non_intersection_crashes[final_cols]
+        crashes_street = non_intersection_crashes.sjoin(street_data, how="inner")[
+            final_cols
+        ]
         if destination_file_name is not None:
             data_base_path = Path("./data")
-            non_intersection_crashes.to_csv(
-                data_base_path / destination_file_name, index=False
-            )
-        return non_intersection_crashes
+            crashes_street.to_csv(data_base_path / destination_file_name, index=False)
+        return crashes_street
