@@ -15,17 +15,19 @@ class CrashDataService:
         self,
         nyc_app_token: str,
         from_year: int = 2010,
+        limit: int = 3000000,
         extra_columns: list[str] | None = None,
     ):
         self.app_token = nyc_app_token
         self.data_loader = OpenDataDownloader(nyc_app_token)
         self.from_year = from_year
         self.columns = extra_columns
-        self.__load_crashes_dataset()
+        self.limit = limit
+        self.__load_crashes_dataset(self.limit)
 
-    def __load_crashes_dataset(self) -> gpd.GeoDataFrame:
+    def __load_crashes_dataset(self, limit: int = 3000000) -> gpd.GeoDataFrame:
         self.crashes = self.data_loader.load_data(
-            data_sources.CRASHES_ENDPOINT, limit=3000000
+            data_sources.CRASHES_ENDPOINT, limit=limit
         )
         columns_to_return = [
             "collision_id",
@@ -58,13 +60,12 @@ class CrashDataService:
         return self.crashes
 
     def __load_streets_dataset(
-        self,
-        columns_to_load: list[str] | None = None,
+        self, columns_to_load: list[str] | None = None, limit: int = 3000000
     ) -> gpd.GeoDataFrame:
         streets = self.data_loader.load_geo_dataframe(
             data_sources.CENTERLINE_ENDPOINT,
             geometry_column="the_geom",
-            limit=3000000,
+            limit=limit,
             to_crs=geo.NYC_EPSG,
         )
         # Streets have road type 1
@@ -78,29 +79,32 @@ class CrashDataService:
         streets.drop_duplicates(subset=["geometry"], inplace=True)
         return streets
 
-    def __load_speed_humps_dataset(self) -> gpd.GeoDataFrame:
+    def __load_speed_humps_dataset(self, limit: int = 3000000) -> gpd.GeoDataFrame:
         humps = self.data_loader.load_geo_dataframe(
             data_sources.SPEEDHUMPS_ENDPOINT,
             "the_geom",
             to_crs=geo.NYC_EPSG,
-            limit=3000000,
+            limit=limit,
         )
-        humps = humps[["humps", "geometry"]]
+        humps = humps[["humps", "date_insta", "geometry"]]
         # Some rows do not have geometry info
         empty_multiline_string = empty(1, GeometryType.MULTILINESTRING)[0]
         humps = humps[humps.geometry != empty_multiline_string]
         humps["humps"] = humps["humps"].astype(float)
-        humps = humps.groupby(by="geometry", as_index=False)["humps"].sum()
+        humps["date_insta"] = humps["date_insta"].apply(self.__get_datetime)
+        humps = humps.groupby(by="geometry", as_index=False).agg(
+            {"humps": "sum", "date_insta": "min"}
+        )
         humps = gpd.GeoDataFrame(humps, crs=geo.NYC_EPSG)
         humps["geometry"] = humps.geometry.centroid
         return humps
 
-    def __load_speed_limits_dataset(self) -> gpd.GeoDataFrame:
+    def __load_speed_limits_dataset(self, limit: int = 3000000) -> gpd.GeoDataFrame:
         speed_limits = self.data_loader.load_geo_dataframe(
             data_sources.SPEEDLIMITS_ENDPOINT,
             "the_geom",
             to_crs=geo.NYC_EPSG,
-            limit=3000000,
+            limit=limit,
         )
         speed_limits = speed_limits[["postvz_sl", "geometry"]]
         speed_limits["postvz_sl"] = speed_limits["postvz_sl"].astype(int)
@@ -111,30 +115,40 @@ class CrashDataService:
         speed_limits["geometry"] = speed_limits.geometry.centroid
         return speed_limits
 
-    def __load_trees_dataset(self) -> gpd.GeoDataFrame:
+    def __load_trees_dataset(self, limit: int = 3000000) -> gpd.GeoDataFrame:
         trees = self.data_loader.load_geo_dataframe(
-            data_sources.TREES_ENDPOINT, "the_geom", to_crs=geo.NYC_EPSG, limit=3000000
+            data_sources.TREES_ENDPOINT, "the_geom", to_crs=geo.NYC_EPSG, limit=limit
         )
         trees = trees[["tree_id", "geometry"]]
         return trees
 
-    def __get_datetime(self, date: str, time: str) -> datetime:
+    def __get_datetime(self, date: str, time: str | None = None) -> datetime:
         year, month, day = list(map(int, date.split("T")[0].split("-")))
-        hour, minute = list(map(int, time.split(":")))
+        if time is None:
+            hour, minute = 0, 0
+        else:
+            hour, minute = list(map(int, time.split(":")))
         return datetime(year, month, day, hour, minute)
 
     def __spatial_join_to_street_data(
         self,
         street_data: gpd.GeoDataFrame,
         right_df: gpd.GeoDataFrame,
-        agg_column: str,
-        agg_op: str,
+        agg_column: str | list[str],
+        agg_op: str | list[str],
     ) -> gpd.GeoDataFrame:
         street_data_cols = list(street_data.columns)
         street_data = street_data.sjoin(right_df, how="left")
+        if isinstance(agg_column, str):
+            agg_dict = {agg_column: pd.NamedAgg(column=agg_column, aggfunc=agg_op)}
+        else:
+            agg_dict = {
+                col: pd.NamedAgg(column=col, aggfunc=op)
+                for col, op in zip(agg_column, agg_op)
+            }
         street_data = street_data.groupby(
             by=street_data_cols, as_index=False, dropna=False
-        ).agg(**{agg_column: pd.NamedAgg(column=agg_column, aggfunc=agg_op)})
+        ).agg(**agg_dict)
         street_data = gpd.GeoDataFrame(street_data, crs=geo.NYC_EPSG)
         return street_data
 
@@ -181,26 +195,28 @@ class CrashDataService:
         if self.columns is not None:
             final_cols += self.columns
         street_data = self.__load_streets_dataset(
-            columns_to_load=["geometry", "physicalid", "shape_leng", "st_width"]
+            limit=self.limit,
+            columns_to_load=["geometry", "physicalid", "shape_leng", "st_width"],
         )
         _, non_intersection_crashes = self.__get_intersection_crashes(
             street_data, buffer
         )
         street_data["geometry"] = street_data.geometry.buffer(buffer)
         if join_speed_humps:
-            humps = self.__load_speed_humps_dataset()
+            humps = self.__load_speed_humps_dataset(limit=self.limit)
             street_data = self.__spatial_join_to_street_data(
-                street_data, humps, "humps", "sum"
+                street_data, humps, ["humps", "date_insta"], ["sum", "min"]
             )
             final_cols.append("humps")
+            final_cols.append("date_insta")
         if join_speed_limits:
-            speed_limits = self.__load_speed_limits_dataset()
+            speed_limits = self.__load_speed_limits_dataset(limit=self.limit)
             street_data = self.__spatial_join_to_street_data(
                 street_data, speed_limits, "postvz_sl", "mean"
             )
             final_cols.append("postvz_sl")
         if join_trees:
-            trees = self.__load_trees_dataset()
+            trees = self.__load_trees_dataset(limit=self.limit)
             street_data = self.__spatial_join_to_street_data(
                 street_data, trees, "tree_id", "count"
             )
