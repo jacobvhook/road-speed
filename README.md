@@ -5,7 +5,7 @@ to predict accident rates in New York City using public road data and other
 geological features, and to identify key road infrastructures that can improve
 safety in the cheapest way possible.
 
-# Authors
+## Authors
 
 - [Assaf Bar-Natan](https://www.linkedin.com/in/assaf-bar-natan-b61556209)
 - [Jesse Frohlich](https://www.linkedin.com/in/jessefrohlich)
@@ -15,17 +15,17 @@ safety in the cheapest way possible.
 
 ## Description
 
-# Overview
+### Overview
 
 Traffic accidents are a leading cause of death and injury amongst Americans
 under the age of 54. A significant portion of these accidents are preventable by
 changing driver attitudes and improving in-vehicle safety measures, but also by
 creating better public infrastructure that encourages safe practices.
 
+The goal of this project is to develop a predictive model that will assess the change in collision rates in a given road section of New York City after changes in road features are implemented.
+
 **paragraph about using ML to identify what these practices are** ** paragraph
 about finding problem areas to improve**
-
-The goal of this project is to... **todo**
 
 **Stakeholders:** General public, local politicians, neighbourhood advocacy
 groups, commuters, urban planners, road design engineers, NYC police, insurance
@@ -34,24 +34,24 @@ companies
 **KPIs for accident rate forecasting:** mean squared error (MSE) and mean
 absolute error (MAE) between the true accident rate and predicted accident rate.
 
-# Datasets
+### Datasets
 
 - Datasets required for the project: road features, urban features (such as
   trees, zoning, intersections), accident rate
   - ...
 - Data processing...
 
-# Approach
+### Approach
 
 **TODO: explain models here**
 
 - **Baseline model**: takes the mean accident rate across the city
 
-# [Web app](https://streamlit.io/)
+## [Web app](https://streamlit.io/)
 
-# Future Iterations
+## Future Iterations
 
-# Citations
+## Citations
 
 ## Project outline
 
@@ -59,7 +59,7 @@ Analyse features of a road's design, and build a model to predict the safety of
 the road, either using KSI metrics or average/ maximum vehicle speed as proxies
 for safety & comfort.
 
-## Proposed Data Features
+### Proposed Data Features
 
 TODO: Add data sources to the following features
 
@@ -96,15 +96,15 @@ TODO: Add data sources to the following features
 - Speed restrictions
   - OSM
 
-## Other points
+### Other points
 
 Since many pedestrian deaths are occurring at nighttime, it may be worth the
 effort to predict road speed / safety as a function of time of day (or
 daytime/nighttime, on-peak/ off-peak)
 
-## Notes on data sources
+### Notes on data sources
 
-### OSM data
+#### OSM data
 
 Data from open street maps is publicly maintained, so different areas will have
 different degrees of completeness. The [Python module OSMnx][OSMnx] can be used
