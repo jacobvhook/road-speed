@@ -1,8 +1,13 @@
+from pathlib import Path
+
 import geopandas as gpd
 import pandas as pd
-from shapely.geometry import shape
 from shapely import wkt
+from shapely.geometry import shape
 from sodapy import Socrata
+
+import geo
+from data_sources import ENDPOINTS
 
 
 class OpenDataDownloader:
@@ -13,26 +18,32 @@ class OpenDataDownloader:
 
     def load_data(
         self,
-        dataset: str | None = None,
-        limit: int | None = None,
-        save_to_file: str | None = None,
-        load_from_file: str | None = None,
+        dataset: str,
+        *,
+        limit: int = 3_000_000,
+        force_download: bool = False,
     ) -> pd.DataFrame:
-        if load_from_file is not None:
-            return pd.read_csv(load_from_file, low_memory=False)
+        data_path: Path = Path(f"../data/{dataset}.csv")
+        if data_path.exists() and not force_download:
+            return pd.read_csv(data_path, low_memory=False)
         client = Socrata("data.cityofnewyork.us", app_token=self.app_token)
-        results = client.get(dataset, limit=limit)
+        results = client.get(ENDPOINTS[dataset], limit=limit)
         df = pd.DataFrame.from_records(results)
-        if save_to_file is not None:
-            df.to_csv(save_to_file, index=False)
+        df.to_csv(data_path, index=False)
         return df
+
+    def to_geo_dataframe(self, df: pd.DataFrame, geometry_column: str, crs: str):
+        df["geometry"] = df[geometry_column].apply(wkt.loads)
+        if geometry_column != "geometry":
+            df.drop(columns=geometry_column, inplace=True)
+        return gpd.GeoDataFrame(df, geometry=df.geometry, crs=crs)
 
     def load_geo_dataframe(
         self,
         dataset: str | None = None,
         geometry_column: str | None = None,
-        crs: str = "EPSG:4326",
-        to_crs: str | None = None,
+        crs: str = geo.STD_EPSG,  # assume all inputs are in lat/long by default
+        to_crs: str = "ESPG:2263",
         limit: int | None = None,
         load_from_file: str | None = None,
         save_to_file: str | None = None,

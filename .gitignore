@@ -3,5 +3,6 @@ cache/
 data-exploration/__pycache__/
 data-exploration/data/
 data-exploration/.env
+data/
 node_modules/
 .DS_Store
