@@ -2,12 +2,45 @@ from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
-from shapely import wkt
 from shapely.geometry import shape
 from sodapy import Socrata
 
 import geo
 from data_sources import ENDPOINTS
+
+
+class GeometryFormatter:
+    def __init__(self, X: pd.DataFrame, crs: str = geo.STD_EPSG):
+        self.X = X
+        self.crs = crs
+
+    def from_geometry_column(self, geometry_column: str) -> gpd.GeoDataFrame:
+        """Convert a DataFrame to a GeoDataFrame using NYC coordinates."""
+        return (
+            gpd.GeoDataFrame(
+                self.X.rename(columns={geometry_column: "geometry"}),
+                geometry=self.X[geometry_column].apply(shape),
+                crs=self.crs,
+            )
+            .to_crs(geo.NYC_EPSG)
+            .dropna(subset=["geometry"])
+        )
+
+    def from_lat_long(
+        self, latitude_column: str = "latitude", longitude_column: str = "longitude"
+    ) -> gpd.GeoDataFrame:
+        return (
+            gpd.GeoDataFrame(
+                self.X,
+                geometry=gpd.points_from_xy(
+                    self.X[longitude_column], self.X[latitude_column]
+                ),
+                crs=self.crs,
+            )
+            .to_crs(geo.NYC_EPSG)
+            .dropna(subset=[latitude_column, longitude_column])
+            .drop(columns=[latitude_column, longitude_column])
+        )
 
 
 class OpenDataDownloader:
@@ -31,47 +64,3 @@ class OpenDataDownloader:
         df = pd.DataFrame.from_records(results)
         df.to_pickle(data_path)
         return df
-
-    def from_geometry_column(
-        self, df: pd.DataFrame, geometry_column: str, crs: str = geo.STD_EPSG
-    ):
-        """Convert a DataFrame to a GeoDataFrame using NYC coordinates."""
-        df.rename(columns={geometry_column: "geometry"}, inplace=True)
-        return gpd.GeoDataFrame(df, geometry=df.geometry.apply(shape), crs=crs).to_crs(
-            geo.NYC_EPSG
-        )
-
-    def load_geo_dataframe(
-        self,
-        dataset: str | None = None,
-        geometry_column: str | None = None,
-        crs: str = geo.STD_EPSG,  # assume all inputs are in lat/long by default
-        to_crs: str = "ESPG:2263",
-        limit: int | None = None,
-        load_from_file: str | None = None,
-        save_to_file: str | None = None,
-    ) -> gpd.GeoDataFrame:
-        return self.to_geo_dataframe(
-            self.load_data(
-                dataset,
-            )
-        )
-        # load_data(dataset).to_geo_...()
-
-        if load_from_file is not None:
-            df = pd.read_csv(load_from_file, low_memory=False)
-            df["geometry"] = df[geometry_column].apply(wkt.loads)
-            if geometry_column != "geometry":
-                df.drop(columns=geometry_column, inplace=True)
-            return gpd.GeoDataFrame(df, geometry=df.geometry, crs=crs)
-        df = self.load_data(dataset, limit)
-        df["geometry"] = df[geometry_column].apply(shape)
-        if geometry_column != "geometry":
-            df.drop(columns=[geometry_column], inplace=True)
-        if to_crs is None:
-            gdf = gpd.GeoDataFrame(df, geometry=df.geometry, crs=crs)
-        else:
-            gdf = gpd.GeoDataFrame(df, geometry=df.geometry, crs=crs).to_crs(to_crs)
-        if save_to_file is not None:
-            gdf.to_csv(save_to_file, index=False)
-        return gdf
