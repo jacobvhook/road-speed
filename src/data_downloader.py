@@ -58,7 +58,7 @@ class OpenDataDownloader:
     ) -> pd.DataFrame:
         data_path: Path = Path(f"../data/{dataset}.pkl")
         if data_path.exists() and not force_download:
-            return pd.read_pickle(data_path)
+            return pd.read_pickle(data_path).iloc[:limit]
         client = Socrata("data.cityofnewyork.us", app_token=self.app_token)
         results = client.get(ENDPOINTS[dataset], limit=limit)
         df = pd.DataFrame.from_records(results)
