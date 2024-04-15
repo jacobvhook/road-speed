@@ -22,7 +22,9 @@ under the age of 54. A significant portion of these accidents are preventable by
 changing driver attitudes and improving in-vehicle safety measures, but also by
 creating better public infrastructure that encourages safe practices.
 
-The goal of this project is to develop a predictive model that will assess the change in collision rates in a given road section of New York City after changes in road features are implemented.
+The goal of this project is to develop a predictive model that will assess the
+change in collision rates in a given road section of New York City after changes
+in road features are implemented.
 
 **paragraph about using ML to identify what these practices are** ** paragraph
 about finding problem areas to improve**
@@ -36,16 +38,40 @@ absolute error (MAE) between the true accident rate and predicted accident rate.
 
 ### Datasets
 
-- Datasets required for the project: road features, urban features (such as
-  trees, zoning, intersections), accident rate
-  - ...
-- Data processing...
+Our data for this project is coming from
+[NYC Open Data](https://opendata.cityofnewyork.us/). Their data includes
+features such as:
+
+- Road Width
+- Traffic Volumes
+- Existence of Speed Humps
+- Existence of Bike Lanes
+- Existence of Trees
+- Car accident locations and times
+
+Data processing... **TODO**
 
 ### Approach
 
-**TODO: explain models here**
+We have several proposed models we are going to test to see how well they
+predict the rate of collisions on a given road segment.
 
-- **Baseline model**: takes the mean accident rate across the city
+- **Baseline Model**: This model always predicts the mean accident rate across
+  the entire city for every road segment, regardless of features. This is
+  important to have because it gives us a basis of comparison by which to
+  measure our other models. If a model cannot do better than just predicting the
+  average every time, it is likely not a very good model.
+- **Linear Regression**: This straightforward model uses linear regression and
+  predicts a linear relationship between features, or combinations thereof, and
+  the accident rate. This is also a good basis of comparison and can be used to
+  assess the effectiveness of more complicated models.
+- **Random Forest Regression**: We also want to test the effectiveness of a
+  random forest regressor. This may prove useful as a way to determine
+  relationships which we would not be able to see through standard linear
+  regressions.
+- **K-Nearest Neighbors Regression**: We want to look at the predictive power of
+  a K-Nearest Neighbors model because roads with similar features are likely to
+  have similar accident rates and can therefore serve as a predictor.
 
 ## [Web app](https://streamlit.io/)
 
