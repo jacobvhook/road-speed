@@ -2,6 +2,7 @@ from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
+from shapely import wkt
 from shapely.geometry import shape
 from sodapy import Socrata
 
@@ -16,10 +17,16 @@ class GeometryFormatter:
 
     def from_geometry_column(self, geometry_column: str) -> gpd.GeoDataFrame:
         """Convert a DataFrame to a GeoDataFrame using NYC coordinates."""
+
+        try:
+            interim = self.X[geometry_column].apply(shape)
+        except AttributeError as e:
+            if str(e) == "'str' object has no attribute 'get'":
+                interim = self.X[geometry_column].apply(wkt.loads)
         return (
             gpd.GeoDataFrame(
                 self.X.rename(columns={geometry_column: "geometry"}),
-                geometry=self.X[geometry_column].apply(shape),
+                geometry=interim,
                 crs=self.crs,
             )
             .to_crs(geo.NYC_EPSG)
