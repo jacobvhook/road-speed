@@ -136,17 +136,7 @@ Data from open street maps is publicly maintained, so different areas will have
 different degrees of completeness. The [Python module OSMnx][OSMnx] can be used
 to fetch and visualize OSM data.
 
-## Contributing
-
-This project uses [`pre-commit`](https://pre-commit.com/) to ensure code
-formatting is consistent before committing. The currently-used hooks are:
-
-- [`black`](https://black.readthedocs.io/en/stable) for `*.py` or `*.ipynb`
-  files.
-- [`prettier`](https://prettier.io/) (with `--prose-wrap always` for markdown)
-
-To set up the hooks on your local machine, install `pre-commit`, then run
-`pre-commit install` to install the formatters that will run before each commit.
+## Usage
 
 To set up the working environment, it is strongly encouraged to set up a virtual
 environment, say with `pyenv`:
@@ -166,6 +156,27 @@ Finally, you can install the packages locally via `pip`:
 ```
 pip install -r requirements.txt
 ```
+
+The `OpenDataDownloader` class in `src` takes an optional app token that can be
+obtained from the [NYC Open Data website](https://data.cityofnewyork.us). To run
+some of the notebooks, you will need to store this app token in a file named
+`.env` in the top directory with the following content:
+
+```
+NYC_OPENDATA_APPTOKEN=<insert your app token here>
+```
+
+## Contributing
+
+This project uses [`pre-commit`](https://pre-commit.com/) to ensure code
+formatting is consistent before committing. The currently-used hooks are:
+
+- [`black`](https://black.readthedocs.io/en/stable) for `*.py` or `*.ipynb`
+  files.
+- [`prettier`](https://prettier.io/) (with `--prose-wrap always` for markdown)
+
+To set up the hooks on your local machine, install `pre-commit`, then run
+`pre-commit install` to install the formatters that will run before each commit.
 
 [TOD]: https://open.toronto.ca/dataset/street-tree-data/
 [OSMnx]: https://pygis.io/docs/d_access_osm.html

@@ -1,7 +1,8 @@
 .venv
 cache/
-data-exploration/__pycache__/
+**/__pycache__/
 data-exploration/data/
-data-exploration/.env
+.env
+data/
 node_modules/
 .DS_Store
