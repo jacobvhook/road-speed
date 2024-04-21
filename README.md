@@ -49,7 +49,10 @@ features such as:
 - Existence of Trees
 - Car accident locations and times
 
-Data processing... **TODO**
+The dataset used to train and test our models is built by joining and
+aggregating information contained in different data sources. This is done
+automatically by the script `src/data_generator.py`. This script will be
+executed if you run `make` in the top directory.
 
 ### Approach
 
