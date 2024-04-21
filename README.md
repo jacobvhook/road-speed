@@ -51,8 +51,8 @@ features such as:
 
 The dataset used to train and test our models is built by joining and
 aggregating information contained in different data sources. This is done
-automatically by the script `src/data_generator.py`. This script will be
-executed if you run `make` in the top directory.
+automatically by `src/data_generator.py`. This script will be executed by
+running `make` in the top directory.
 
 ### Approach
 
