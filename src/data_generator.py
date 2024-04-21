@@ -2,6 +2,7 @@ from data_downloader import OpenDataDownloader, GeometryFormatter
 from data_helpers import RoadFeaturesCalculator, FeatureJoiner
 from dotenv import load_dotenv
 from geopandas import GeoDataFrame
+import argparse
 import geo
 import os
 
@@ -17,8 +18,9 @@ def get_geodataframe(
     dataset: str,
     geometry_column: str | None = None,
     crs: str = geo.STD_EPSG,
+    force_download=False,
 ) -> GeoDataFrame:
-    df = loader.load_data(dataset=dataset, force_download=True)
+    df = loader.load_data(dataset=dataset, force_download=force_download)
     if geometry_column is None:
         return GeometryFormatter(df, crs=crs).from_lat_long()
     return GeometryFormatter(df, crs=crs).from_geometry_column(
@@ -27,6 +29,16 @@ def get_geodataframe(
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-f",
+        "--force-download",
+        action="store_true",
+        help="Forces the datasets to be downloaded",
+    )
+    args = parser.parse_args()
+    if args.force_download:
+        print("The datasets will be downloaded from NYC Open Data\n")
     columns_to_aggregate_by = ["physicalid", "after", "until"]
     columns_from_centerline = [
         "physicalid",
@@ -37,19 +49,31 @@ if __name__ == "__main__":
     ]
     loader = get_open_data_loader()
     print("[ 1/15] Loading centerline dataset...")
-    streets = get_geodataframe(loader, "centerline", "the_geom")
+    streets = get_geodataframe(
+        loader, "centerline", "the_geom", force_download=args.force_download
+    )
     print("[ 2/15] Loading speed humps dataset...")
-    speed_humps = get_geodataframe(loader, "speedhumps", "the_geom")
+    speed_humps = get_geodataframe(
+        loader, "speedhumps", "the_geom", force_download=args.force_download
+    )
     print("[ 3/15] Loading trees dataset...")
-    trees = get_geodataframe(loader, "trees", "the_geom")
+    trees = get_geodataframe(
+        loader, "trees", "the_geom", force_download=args.force_download
+    )
     print("[ 4/15] Loading speed limits dataset...")
-    speed_limits = get_geodataframe(loader, "speedlimits", "the_geom")
+    speed_limits = get_geodataframe(
+        loader, "speedlimits", "the_geom", force_download=args.force_download
+    )
     print("[ 5/15] Loading traffic volumes dataset...")
     traffic_volumes = get_geodataframe(
-        loader, "traffic_volumes", "wktgeom", crs=geo.NYC_EPSG
+        loader,
+        "traffic_volumes",
+        "wktgeom",
+        crs=geo.NYC_EPSG,
+        force_download=args.force_download,
     )
     print("[ 6/15] Loading crashes dataset...")
-    crashes = get_geodataframe(loader, "crashes")
+    crashes = get_geodataframe(loader, "crashes", force_download=args.force_download)
     joiner = FeatureJoiner(streets, column_selection=columns_from_centerline)
     print("[ 7/15] Joining speed humps to street information...")
     joiner.add_linear_feature(
