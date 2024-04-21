@@ -127,6 +127,7 @@ if __name__ == "__main__":
     joiner.streets["shape_leng"] = joiner.streets["shape_leng"].astype(float)
     joiner.streets["bike_lane"] = joiner.streets["bike_lane"].astype(str)
     print("[15/15] Saving to disk...")
+    os.makedirs("../data", exist_ok=True)
     joiner.streets.drop(columns=["after", "until"]).to_pickle(
         "../data/final_dataset.pkl"
     )
