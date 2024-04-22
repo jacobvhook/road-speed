@@ -2,8 +2,11 @@ from data_downloader import OpenDataDownloader, GeometryFormatter
 from data_helpers import RoadFeaturesCalculator, FeatureJoiner
 from dotenv import load_dotenv
 from geopandas import GeoDataFrame
+from pandas import cut
 import argparse
+import data_sources
 import geo
+import numpy as np
 import os
 
 
@@ -39,6 +42,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.force_download:
         print("The datasets will be downloaded from NYC Open Data\n")
+
     columns_to_aggregate_by = ["physicalid", "after", "until"]
     columns_from_centerline = [
         "physicalid",
@@ -47,45 +51,40 @@ if __name__ == "__main__":
         "st_width",
         "shape_leng",
     ]
+
+    dataframes = dict()
     loader = get_open_data_loader()
-    print("[ 1/15] Loading centerline dataset...")
-    streets = get_geodataframe(
-        loader, "centerline", "the_geom", force_download=args.force_download
+
+    for dataset, metadata in data_sources.DATASET_METADATA.items():
+        print(f"Loading {dataset} dataset...")
+        dataframes[dataset] = get_geodataframe(
+            loader,
+            dataset=dataset,
+            geometry_column=metadata.get("geometry_column", None),
+            crs=metadata.get("crs", geo.STD_EPSG),
+            force_download=args.force_download,
+        )
+
+    joiner = FeatureJoiner(
+        dataframes["centerline"], column_selection=columns_from_centerline
     )
-    print("[ 2/15] Loading speed humps dataset...")
-    speed_humps = get_geodataframe(
-        loader, "speedhumps", "the_geom", force_download=args.force_download
-    )
-    print("[ 3/15] Loading trees dataset...")
-    trees = get_geodataframe(
-        loader, "trees", "the_geom", force_download=args.force_download
-    )
-    print("[ 4/15] Loading speed limits dataset...")
-    speed_limits = get_geodataframe(
-        loader, "speedlimits", "the_geom", force_download=args.force_download
-    )
-    print("[ 5/15] Loading traffic volumes dataset...")
-    traffic_volumes = get_geodataframe(
-        loader,
-        "traffic_volumes",
-        "wktgeom",
-        crs=geo.NYC_EPSG,
-        force_download=args.force_download,
-    )
-    print("[ 6/15] Loading crashes dataset...")
-    crashes = get_geodataframe(loader, "crashes", force_download=args.force_download)
-    joiner = FeatureJoiner(streets, column_selection=columns_from_centerline)
-    print("[ 7/15] Joining speed humps to street information...")
+
+    print("Joining speed humps data to streets dataset...")
     joiner.add_linear_feature(
-        speed_humps, output_column="has_humps", install_date_column="date_insta"
+        dataframes["speedhumps"],
+        output_column="has_humps",
+        install_date_column="date_insta",
     )
-    print("[ 8/15] Joining speed limits to street information...")
-    speed_limits["postvz_sl"] = speed_limits["postvz_sl"].astype(float)
-    print("[ 9/15] Joining traffic volumes to street information...")
-    traffic_volumes["vol"] = traffic_volumes["vol"].astype(float)
-    print("[10/15] Joining crashes to street information...")
+    dataframes["speedlimits"]["postvz_sl"] = dataframes["speedlimits"][
+        "postvz_sl"
+    ].astype(float)
+    dataframes["traffic_volumes"]["vol"] = dataframes["traffic_volumes"]["vol"].astype(
+        float
+    )
+
+    print("Processing crashes data using street information...")
     crashes = RoadFeaturesCalculator(
-        crashes, joiner.streets
+        dataframes["crashes"], joiner.streets
     ).calculate_point_road_features(
         output_column="collision_rate",
         method="weighted",
@@ -93,13 +92,17 @@ if __name__ == "__main__":
         date_column="crash_date",
         cols_to_aggregate_by=columns_to_aggregate_by,
     )
-    print("[11/15] Joining trees to street information...")
-    trees = RoadFeaturesCalculator(trees, joiner.streets).calculate_point_road_features(
+
+    print("")
+    trees = RoadFeaturesCalculator(
+        dataframes["trees"], joiner.streets
+    ).calculate_point_road_features(
         "n_trees", method="uniform", cols_to_aggregate_by=columns_to_aggregate_by
     )
-    print("[12/15] Joining speed limits to street information...")
+
+    print("Processing speed limits data using street information...")
     speed_limits = RoadFeaturesCalculator(
-        speed_limits, joiner.streets
+        dataframes["speedlimits"], joiner.streets
     ).calculate_point_road_features(
         output_column="speed_limit",
         method="value",
@@ -107,26 +110,53 @@ if __name__ == "__main__":
         agg_function="max",
         cols_to_aggregate_by=columns_to_aggregate_by,
     )
-    print("[13/15] Joining traffic volumes to street information...")
+
+    print("Processing traffic volumes data using street information...")
     traffic_volumes = RoadFeaturesCalculator(
-        traffic_volumes, joiner.streets
+        dataframes["traffic_volumes"], joiner.streets
     ).calculate_point_road_features(
-        "traffic_volumes",
+        "traffic_volume",
         feature_value_column="vol",
         method="value",
         agg_function="mean",
         cols_to_aggregate_by=columns_to_aggregate_by,
     )
-    print("[14/15] Consolidating...")
+
+    print("Processing parking meters data using street information...")
+    parking_meters = RoadFeaturesCalculator(
+        dataframes["parking_meters"], joiner.streets
+    ).calculate_point_road_features(
+        "n_parking_meters",
+        method="uniform",
+        cols_to_aggregate_by=columns_to_aggregate_by,
+    )
+
+    print("Joining all features...")
     joiner.add_multiple_features(
-        [crashes, trees, speed_limits, traffic_volumes],
+        [crashes, trees, speed_limits, traffic_volumes, parking_meters],
         index_cols=columns_to_aggregate_by,
     )
+
     joiner.streets["physicalid"] = joiner.streets["physicalid"].astype(int)
     joiner.streets["st_width"] = joiner.streets["st_width"].astype(float)
     joiner.streets["shape_leng"] = joiner.streets["shape_leng"].astype(float)
     joiner.streets["bike_lane"] = joiner.streets["bike_lane"].astype(str)
-    print("[15/15] Saving to disk...")
+
+    percentiles = [50, 75, 90, 95, 99]
+    labels = ["bottom_50", "top_50", "top_75", "top_10", "top_5", "top_1"]
+    percentile_bins = (
+        [-np.inf]
+        + [
+            np.percentile(joiner.streets["collision_rate"].values, q=p)
+            for p in percentiles
+        ]
+        + [np.inf]
+    )
+    joiner.streets["percentile"] = cut(
+        joiner.streets["collision_rate"], percentile_bins, labels=labels
+    )
+
+    print("Saving to disk...")
     os.makedirs("../data", exist_ok=True)
     joiner.streets.drop(columns=["after", "until"]).to_pickle(
         "../data/final_dataset.pkl"
