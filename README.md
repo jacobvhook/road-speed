@@ -8,10 +8,9 @@ safety in the cheapest way possible.
 ## Authors
 
 - [Assaf Bar-Natan](https://www.linkedin.com/in/assaf-bar-natan-b61556209)
-- [Jesse Frohlich](https://www.linkedin.com/in/jessefrohlich)
+- [Jesse Frohlich](https://www.linkedin.com/in/jesse-frohlich)
 - [Jacob van Hook](https://www.linkedin.com/in/jacob-van-hook-4484b2288/)
 - [Pedro Lemos](https://www.linkedin.com/in/pedro-j-lemos/)
-- [Guillermo Sanmarco](https://www.linkedin.com/in/guillermo-sanmarco-050904239/)
 
 ## Description
 
@@ -165,6 +164,9 @@ some of the notebooks, you will need to store this app token in a file named
 ```
 NYC_OPENDATA_APPTOKEN=<insert your app token here>
 ```
+
+Finally, we have a make file to download all the data and aggregate it into a
+cleaned dataset, you need only run `make` from the root project directory.
 
 ## Contributing
 
