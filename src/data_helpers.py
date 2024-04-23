@@ -159,7 +159,9 @@ class FeatureJoiner:
 
     def __init__(self, streets: gpd.GeoDataFrame, column_selection: list[str]):
         self.streets = (
-            streets[streets["rw_type"] == "1"][column_selection]
+            streets[
+                (streets["rw_type"] == "1") & (streets["shape_leng"].astype(float) > 80)
+            ][column_selection]
             .drop_duplicates(subset=["physicalid"])
             .copy()
         )

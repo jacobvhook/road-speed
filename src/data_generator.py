@@ -50,6 +50,9 @@ if __name__ == "__main__":
         "bike_lane",
         "st_width",
         "shape_leng",
+        "post_type",
+        "pre_type",
+        "st_name",
     ]
 
     dataframes = dict()
@@ -141,19 +144,22 @@ if __name__ == "__main__":
     joiner.streets["st_width"] = joiner.streets["st_width"].astype(float)
     joiner.streets["shape_leng"] = joiner.streets["shape_leng"].astype(float)
     joiner.streets["bike_lane"] = joiner.streets["bike_lane"].astype(str)
+    joiner.streets["collision_rate_per_length"] = (
+        joiner.streets["collision_rate"] / joiner.streets["shape_leng"]
+    )
 
     percentiles = [50, 75, 90, 95, 99]
-    labels = ["bottom_50", "top_50", "top_75", "top_10", "top_5", "top_1"]
+    labels = ["bottom_50", "top_50", "top_25", "top_10", "top_5", "top_1"]
     percentile_bins = (
         [-np.inf]
         + [
-            np.percentile(joiner.streets["collision_rate"].values, q=p)
+            np.percentile(joiner.streets["collision_rate_per_length"].values, q=p)
             for p in percentiles
         ]
         + [np.inf]
     )
     joiner.streets["percentile"] = cut(
-        joiner.streets["collision_rate"], percentile_bins, labels=labels
+        joiner.streets["collision_rate_per_length"], percentile_bins, labels=labels
     )
 
     print("Saving to disk...")
