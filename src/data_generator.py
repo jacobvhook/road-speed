@@ -1,13 +1,15 @@
-from data_downloader import OpenDataDownloader, GeometryFormatter
-from data_helpers import RoadFeaturesCalculator, FeatureJoiner
+import argparse
+import os
+
+import numpy as np
 from dotenv import load_dotenv
 from geopandas import GeoDataFrame
 from pandas import cut
-import argparse
+
 import data_sources
 import geo
-import numpy as np
-import os
+from data_downloader import GeometryFormatter, OpenDataDownloader
+from data_helpers import FeatureJoiner, RoadFeaturesCalculator
 
 
 def get_open_data_loader() -> OpenDataDownloader:
@@ -96,11 +98,20 @@ if __name__ == "__main__":
         cols_to_aggregate_by=columns_to_aggregate_by,
     )
 
-    print("")
+    print("Processing trees data using street information...")
     trees = RoadFeaturesCalculator(
         dataframes["trees"], joiner.streets
     ).calculate_point_road_features(
         "n_trees", method="uniform", cols_to_aggregate_by=columns_to_aggregate_by
+    )
+
+    print("Processing leading pedestrian intervals data using street information...")
+    ped_intervals = RoadFeaturesCalculator(
+        dataframes["leading_pedestrian_intervals"], joiner.streets
+    ).calculate_point_road_features(
+        "n_ped_intervals",
+        method="uniform",
+        cols_to_aggregate_by=columns_to_aggregate_by,
     )
 
     print("Processing speed limits data using street information...")
@@ -136,7 +147,7 @@ if __name__ == "__main__":
 
     print("Joining all features...")
     joiner.add_multiple_features(
-        [crashes, trees, speed_limits, traffic_volumes, parking_meters],
+        [crashes, trees, speed_limits, traffic_volumes, parking_meters, ped_intervals],
         index_cols=columns_to_aggregate_by,
     )
 

@@ -29,4 +29,8 @@ DATASET_METADATA: dict[str, str] = {
         "geometry_column": "location",
         "endpoint": "693u-uax6",
     },
+    "leading_pedestrian_intervals": {
+        "geometry_column": "the_geom",
+        "endpoint": "xc4v-ntf4",
+    },
 }
