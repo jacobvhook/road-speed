@@ -90,7 +90,7 @@ if __name__ == "__main__":
         dataframes["crashes"], joiner.streets
     ).calculate_point_road_features(
         output_column="collision_rate",
-        method="weighted",
+        method="uniform",
         split_by_date=True,
         date_column="crash_date",
         cols_to_aggregate_by=columns_to_aggregate_by,

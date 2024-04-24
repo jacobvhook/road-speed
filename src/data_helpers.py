@@ -109,6 +109,15 @@ class RoadFeaturesCalculator:
             weighted_features = self.features.sjoin(
                 intersection_weights, how="left", predicate="within"
             )[feature_columns].fillna(value=1.0)
+        elif method == "binary":
+            feature_columns.append("weight")
+            intersection_weights = self.__get_intersection_weights(
+                buffer=buffer, intersection_data_path=intersection_data_path
+            )
+            intersection_weights["weight"] = 0
+            weighted_features = self.features.sjoin(
+                intersection_weights, how="left", predicate="within"
+            )[feature_columns].fillna(value=1.0)
         elif method == "uniform":
             weighted_features = self.features[feature_columns].copy()
             weighted_features["weight"] = 1.0
