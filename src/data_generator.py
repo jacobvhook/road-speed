@@ -1,13 +1,19 @@
-from data_downloader import OpenDataDownloader, GeometryFormatter
-from data_helpers import RoadFeaturesCalculator, FeatureJoiner
+import argparse
+import os
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
 from dotenv import load_dotenv
 from geopandas import GeoDataFrame
-from pandas import cut
-import argparse
+from sklearn.model_selection import train_test_split
+
 import data_sources
 import geo
-import numpy as np
-import os
+from data_downloader import GeometryFormatter, OpenDataDownloader
+from data_helpers import FeatureJoiner, RoadFeaturesCalculator
+
+DATA_FOLDER = Path("../data")
 
 
 def get_open_data_loader() -> OpenDataDownloader:
@@ -68,8 +74,30 @@ if __name__ == "__main__":
             force_download=args.force_download,
         )
 
+    print("Establishing streets dataset...")
     joiner = FeatureJoiner(
-        dataframes["centerline"], column_selection=columns_from_centerline
+        streets=dataframes["centerline"], column_selection=columns_from_centerline
+    )
+    joiner.streets["physicalid"] = joiner.streets["physicalid"].astype(int)
+    joiner.streets["st_width"] = joiner.streets["st_width"].astype(float)
+    joiner.streets["shape_leng"] = joiner.streets["shape_leng"].astype(float)
+    joiner.streets.rename(columns={"bike_lane": "has_bike_lane"}, inplace=True)
+    joiner.streets["has_bike_lane"] = joiner.streets["has_bike_lane"].apply(pd.notna)
+
+    joiner.streets["is_av"] = (
+        (joiner.streets["post_type"].isin(["AVE", "BLVD"]))
+        | (joiner.streets["pre_type"] == "AVE")
+        | (joiner.streets["st_name"].isin(["BROADWAY", "BOWERY"]))
+    )
+    joiner.streets["is_st"] = joiner.streets["post_type"] == "ST"
+    joiner.streets["is_rd"] = joiner.streets["post_type"].isin(["RD", "ROAD"])
+    joiner.streets.drop(
+        columns=[
+            "post_type",
+            "pre_type",
+            "st_name",
+        ],
+        inplace=True,
     )
 
     print("Joining speed humps data to streets dataset...")
@@ -78,12 +106,7 @@ if __name__ == "__main__":
         output_column="has_humps",
         install_date_column="date_insta",
     )
-    dataframes["speedlimits"]["postvz_sl"] = dataframes["speedlimits"][
-        "postvz_sl"
-    ].astype(float)
-    dataframes["traffic_volumes"]["vol"] = dataframes["traffic_volumes"]["vol"].astype(
-        float
-    )
+    del dataframes["speedhumps"]
 
     print("Processing crashes data using street information...")
     crashes = RoadFeaturesCalculator(
@@ -104,6 +127,9 @@ if __name__ == "__main__":
     )
 
     print("Processing speed limits data using street information...")
+    dataframes["speedlimits"]["postvz_sl"] = dataframes["speedlimits"][
+        "postvz_sl"
+    ].astype(float)
     speed_limits = RoadFeaturesCalculator(
         dataframes["speedlimits"], joiner.streets
     ).calculate_point_road_features(
@@ -115,6 +141,9 @@ if __name__ == "__main__":
     )
 
     print("Processing traffic volumes data using street information...")
+    dataframes["traffic_volumes"]["vol"] = dataframes["traffic_volumes"]["vol"].astype(
+        float
+    )
     traffic_volumes = RoadFeaturesCalculator(
         dataframes["traffic_volumes"], joiner.streets
     ).calculate_point_road_features(
@@ -140,30 +169,29 @@ if __name__ == "__main__":
         index_cols=columns_to_aggregate_by,
     )
 
-    joiner.streets["physicalid"] = joiner.streets["physicalid"].astype(int)
-    joiner.streets["st_width"] = joiner.streets["st_width"].astype(float)
-    joiner.streets["shape_leng"] = joiner.streets["shape_leng"].astype(float)
-    joiner.streets["bike_lane"] = joiner.streets["bike_lane"].astype(str)
+    print("Recasting datatypes...")
     joiner.streets["collision_rate_per_length"] = (
         joiner.streets["collision_rate"] / joiner.streets["shape_leng"]
     )
 
-    percentiles = [50, 75, 90, 95, 99]
-    labels = ["bottom_50", "top_50", "top_25", "top_10", "top_5", "top_1"]
-    percentile_bins = (
-        [-np.inf]
-        + [
-            np.percentile(joiner.streets["collision_rate_per_length"].values, q=p)
-            for p in percentiles
-        ]
-        + [np.inf]
-    )
-    joiner.streets["percentile"] = cut(
-        joiner.streets["collision_rate_per_length"], percentile_bins, labels=labels
+    joiner.streets.drop(columns=["after", "until"], inplace=True)
+
+    joiner.streets["has_volume_meas"] = ~joiner.streets["traffic_volume"].isna()
+    joiner.streets["has_parking_meters"] = joiner.streets["n_parking_meters"] > 0
+
+    print("Imputing data...")
+    joiner.streets.dropna(subset="st_width", inplace=True)
+    joiner.streets["speed_limit"] = joiner.streets["speed_limit"].fillna(value=25)
+
+    print("Generating train/test split...")
+    collisions_train, collisions_test = train_test_split(
+        joiner.streets,
+        test_size=0.2,
+        random_state=316_203_477,
     )
 
     print("Saving to disk...")
-    os.makedirs("../data", exist_ok=True)
-    joiner.streets.drop(columns=["after", "until"]).to_pickle(
-        "../data/final_dataset.pkl"
-    )
+    os.makedirs(DATA_FOLDER, exist_ok=True)
+    collisions_train.to_pickle(DATA_FOLDER / "final_dataset_train.pkl")
+    collisions_test.to_pickle(DATA_FOLDER / "final_dataset_test.pkl")
+    joiner.streets.to_pickle(DATA_FOLDER / "final_dataset.pkl")
