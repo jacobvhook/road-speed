@@ -181,6 +181,7 @@ if __name__ == "__main__":
 
     print("Imputing data...")
     joiner.streets.dropna(subset="st_width", inplace=True)
+    joiner.streets = joiner.streets[joiner.streets["st_width"] > 0].copy()
     joiner.streets["speed_limit"] = joiner.streets["speed_limit"].fillna(value=25)
 
     print("Generating train/test split...")
