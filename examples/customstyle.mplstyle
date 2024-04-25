@@ -1,0 +1,5 @@
+axes.spines.top: False
+axes.spines.right: False
+axes.titlesize: 12
+axes.titleweight: "bold"
+axes.titlelocation: "left"
