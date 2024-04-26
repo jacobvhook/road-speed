@@ -67,15 +67,13 @@ predict the rate of collisions on a given road segment.
   predicts a linear relationship between features, or combinations thereof, and
   the accident rate. This is also a good basis of comparison and can be used to
   assess the effectiveness of more complicated models.
-- **Random Forest Regression**: We also want to test the effectiveness of a
-  random forest regressor. This may prove useful as a way to determine
-  relationships which we would not be able to see through standard linear
-  regressions.
+- **Random Forest Regression and XGBoost**: We also want to test the
+  effectiveness of a random forest regressor. This may prove useful as a way to
+  determine relationships which we would not be able to see through standard
+  linear regressions.
 - **K-Nearest Neighbors Regression**: We want to look at the predictive power of
   a K-Nearest Neighbors model because roads with similar features are likely to
   have similar accident rates and can therefore serve as a predictor.
-
-## [Web app](https://streamlit.io/)
 
 ## Future Iterations
 
