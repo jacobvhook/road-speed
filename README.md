@@ -1,7 +1,7 @@
 # Road safety
 
 The purpose of this project is to use regression modeling and neural networks to
-to predict accident rates in New York City using public road data and other
+to predict collision rates in New York City using public road data and other
 geological features, and to identify key road infrastructures that can improve
 safety in the cheapest way possible.
 
@@ -16,10 +16,10 @@ safety in the cheapest way possible.
 
 ### Overview
 
-Traffic accidents are a leading cause of death and injury amongst Americans
-under the age of 54. A significant portion of these accidents are preventable by
-changing driver attitudes and improving in-vehicle safety measures, but also by
-creating better public infrastructure that encourages safe practices.
+Traffic collisions are a leading cause of death and injury amongst Americans
+under the age of 54. A significant portion of these collisions are preventable
+by changing driver attitudes and improving in-vehicle safety measures, but also
+by creating better public infrastructure that encourages safe practices.
 
 The goal of this project is to develop a predictive model that will assess the
 change in collision rates in a given road section of New York City after changes
@@ -32,8 +32,9 @@ order to model collision rates on roads.
 groups, commuters, urban planners, road design engineers, NYC police, insurance
 companies
 
-**KPIs for accident rate forecasting:** mean squared error (MSE) and mean
-absolute error (MAE) between the true accident rate and predicted accident rate.
+**KPIs for collision rate forecasting:** mean squared error (MSE) and mean
+absolute error (MAE) between the true collision rate and predicted collision
+rate.
 
 ### Datasets
 
@@ -46,7 +47,7 @@ features such as:
 - Existence of Speed Humps
 - Existence of Bike Lanes
 - Existence of Trees
-- Car accident locations and times
+- Vehicle collision locations and times
 
 The dataset used to train and test our models is built by joining and
 aggregating information contained in different data sources. This is done
@@ -58,14 +59,14 @@ running `make` in the top directory.
 We have several proposed models we are going to test to see how well they
 predict the rate of collisions on a given road segment.
 
-- **Baseline Model**: This model always predicts the mean accident rate across
+- **Baseline Model**: This model always predicts the mean collision rate across
   the entire city for every road segment, regardless of features. This is
   important to have because it gives us a basis of comparison by which to
   measure our other models. If a model cannot do better than just predicting the
   average every time, it is likely not a very good model.
 - **Linear Regression**: This straightforward model uses linear regression and
   predicts a linear relationship between features, or combinations thereof, and
-  the accident rate. This is also a good basis of comparison and can be used to
+  the collision rate. This is also a good basis of comparison and can be used to
   assess the effectiveness of more complicated models.
 - **Random Forest Regression and XGBoost**: We also want to test the
   effectiveness of a random forest regressor. This may prove useful as a way to
@@ -73,7 +74,7 @@ predict the rate of collisions on a given road segment.
   linear regressions.
 - **K-Nearest Neighbors Regression**: We want to look at the predictive power of
   a K-Nearest Neighbors model because roads with similar features are likely to
-  have similar accident rates and can therefore serve as a predictor.
+  have similar collision rates and can therefore serve as a predictor.
 
 ## Future Iterations
 
