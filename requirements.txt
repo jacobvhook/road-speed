@@ -7,3 +7,4 @@ pandas>=2.2.0
 scikit-learn>=1.4.0
 shapely>=2.0.3
 sodapy>=2.2.0
+xgboost
