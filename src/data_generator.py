@@ -108,6 +108,14 @@ if __name__ == "__main__":
     )
     del dataframes["speedhumps"]
 
+    print("Dropping irrelevant speed hump rows...")
+    dataframes["centerline"] = dataframes["centerline"][
+        dataframes["centerline"]["until"] > np.datetime64("2013-07")
+    ]
+    dataframes["centerline"] = dataframes["centerline"][
+        dataframes["centerline"]["after"] < np.datetime64("2023-03")
+    ]
+
     print("Processing crashes data using street information...")
     crashes = RoadFeaturesCalculator(
         dataframes["crashes"], joiner.streets
