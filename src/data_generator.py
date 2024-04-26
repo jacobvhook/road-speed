@@ -108,6 +108,10 @@ if __name__ == "__main__":
     )
     del dataframes["speedhumps"]
 
+    print("Dropping irrelevant speed hump rows...")
+    joiner.streets = joiner.streets[joiner.streets["until"] > np.datetime64("2013-07")]
+    joiner.streets = joiner.streets[joiner.streets["after"] < np.datetime64("2023-03")]
+
     print("Processing crashes data using street information...")
     crashes = RoadFeaturesCalculator(
         dataframes["crashes"], joiner.streets
@@ -167,6 +171,11 @@ if __name__ == "__main__":
     joiner.add_multiple_features(
         [crashes, trees, speed_limits, traffic_volumes, parking_meters],
         index_cols=columns_to_aggregate_by,
+    )
+
+    print("Computing weekly crash rates...")
+    joiner.streets["collision_rate"] = joiner.streets["collision_rate"] / (
+        (joiner.streets["until"] - joiner.streets["after"]) / np.timedelta64(1, "W")
     )
 
     print("Recasting datatypes...")
