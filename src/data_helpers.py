@@ -15,10 +15,6 @@ class RoadFeaturesCalculator:
         self.features = features
         self.streets = streets
 
-    def __get_week_span(self, date_column: str) -> float:
-        crash_dates = self.features[date_column]
-        return (crash_dates.max() - crash_dates.min()) / timedelta64(1, "W")
-
     def __get_intersection_weights(
         self,
         buffer: int = 30,
@@ -82,7 +78,7 @@ class RoadFeaturesCalculator:
         features_old[output_column] = False
         features_old.rename(columns={"after": "until", "until": "after"}, inplace=True)
         return pd.concat([features_aggregate, features_old]).fillna(
-            {"until": datetime64("2100-01-01"), "after": datetime64("1900-01-01")}
+            {"until": datetime64("2024-04"), "after": datetime64("2012-07")}
         )
 
     def calculate_point_road_features(
@@ -156,11 +152,6 @@ class RoadFeaturesCalculator:
             .agg(agg_function)
             .rename(columns={"weight": output_column})
         )
-        if date_column is not None:
-            week_span = self.__get_week_span(date_column)
-            feature_aggregation[output_column] = (
-                feature_aggregation[output_column] / week_span
-            )
         return feature_aggregation
 
 
