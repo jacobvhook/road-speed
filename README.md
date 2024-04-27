@@ -30,7 +30,7 @@ order to model collision rates on roads.
 
 **Stakeholders:** General public, local politicians, neighbourhood advocacy
 groups, commuters, urban planners, road design engineers, NYC police, insurance
-companies
+companies.
 
 **KPIs for collision rate forecasting:** mean squared error (MSE) and mean
 absolute error (MAE) between the true collision rate and predicted collision
