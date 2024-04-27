@@ -7,6 +7,6 @@ and to test the custom classes that can be found in `../src`.
   NYC collision rates.
 - `regression_traffic_vol.ipynb` is the notebook used to build our regression
   models.
-- `test.ipynb` runs our models against the test dataset. To run this notebook,
-  you must first build the models with `regression_traffic_vol.ipynb`.
+- `model_evaluation.ipynb` runs our models against the test dataset. To run this
+  notebook, you must first build the models with `regression_traffic_vol.ipynb`.
 - The other notebooks were used to test our custom classes.
