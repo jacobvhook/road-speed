@@ -1,9 +1,9 @@
 # Road safety
 
 The purpose of this project is to use regression modeling and neural networks to
-to predict collision rates in New York City using public road data and other
+predict collision rates in New York City using public road data and other
 geological features, and to identify key road infrastructures that can improve
-safety in the cheapest way possible.
+safety as economically as possible.
 
 ## Authors
 
@@ -130,6 +130,3 @@ formatting is consistent before committing. The currently-used hooks are:
 
 To set up the hooks on your local machine, install `pre-commit`, then run
 `pre-commit install` to install the formatters that will run before each commit.
-
-[TOD]: https://open.toronto.ca/dataset/street-tree-data/
-[OSMnx]: https://pygis.io/docs/d_access_osm.html
