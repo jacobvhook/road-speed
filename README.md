@@ -78,7 +78,12 @@ predict the rate of collisions on a given road segment.
 
 ## Future Iterations
 
-## Citations
+- Adding more features relevant to road safety, for instance:
+  - the installation of leading pedestrian traffic signals
+  - the amount of physical separation present in cycling infrastructure
+  - the width of individual lanes, as opposed to the entire roadway
+- Extending the model to other cities with "Vision Zero" road safety plans (and
+  hence sufficient data to analyse).
 
 ## Project outline
 
